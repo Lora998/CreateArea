@@ -2,7 +2,6 @@
 // Name        : CreateArea.cpp
 // Author      : 
 // Version     :
-// Copyright   : Your copyright notice
 
 //============================================================================
 
@@ -19,8 +18,29 @@ double getDistanceToDroplet(double x, double y, Droplets d){
 	return (sqrt(pow(d.getX()-x, 2) + pow(d.getY()-y, 2)));
 }
 
-void createAreaVTK(string dataname, Area a){
-	
+void createAreaVTK(string dataname, double ***area, Area a){
+	ofstream fos(dataname+"areaSize.vtk");
+	if(!fos || ! fos.is_open()){
+		cerr << "There was a problem opening the input file." << endl;
+		exit(0);
+	}
+	fos << "# vtk DataFile Version 3.0" <<endl;
+	fos << "vtk Output in ascii" <<endl;
+	fos << "ASCII" << endl;
+	fos << "DATASET STRUCTURED_POINTS" << endl;
+	fos <<"DIMENSIONS " << a.getWidth() << " " << a.getHeight() <<endl;
+	fos << "ORIGIN 0 0 0" << endl;
+	fos << "SPACING 1 1 1" <<endl;
+	fos << "POINT_DATA " << (a.getWidth()*a.getWidth()) << endl;
+	fos << "\n";
+	fos << "SCALARS Cells int 1" << endl;
+	fos << "LOOKUP_TABLE default" << endl;
+	for(int x = 0; x < a.getWidth(); x++){
+		for(int y = 0; a.getHeight(); y++){
+			fos << (int)(area[0][x][y]) << endl;
+		}
+	}
+	fos.close();
 }
 
 void createAngleVTK(string dataname, Area a){
@@ -72,8 +92,18 @@ void parseArgs(int &argc, char **argv, string &inputFile, string &outputFile, bo
     }
 }
 
-void calculateArea(double *** area, Area a){
-	
+void calculateArea( Area a,double ***area){
+	for(int x = 0; x < a.getWidth(); x++){
+		for(int y = 0; a.getHeight(); y++){
+			area[0][x][y] = 0.;
+			for(Droplets d : a.getDroplets() ){
+				if(getDistanceToDroplet(x, y, d) <= d.getRadian()){
+					area[0][x][y] = 1.;
+					break;
+				}
+			}
+		}
+    }
 }
 
 int main(int argc, char *argv[]){
@@ -109,8 +139,9 @@ int main(int argc, char *argv[]){
 				outputFile = generateFilenamePrefix();
 				cout << "The data will be stored in "<< outputFile << endl;
 			}
-			createAreaVTK(outputFile, a);
-			createAngleVTK(outputFile, a);
+			calculateArea(a, area);
+		//	createAreaVTK(outputFile, area, a);
+		//	createAngleVTK(outputFile,area, a);
 		}
 		else{
 			for(Droplets d : a.getDroplets() ){
@@ -128,8 +159,8 @@ int main(int argc, char *argv[]){
 				outputFile = generateFilenamePrefix();
 				cout << "The data will be stored in "<< outputFile << endl;
 			}
-			createAreaVTK(outputFile, a);
-			createAngleVTK(outputFile, a);
+//			createAreaVTK(outputFile, a);
+//			createAngleVTK(outputFile, a);
 		}
 		else{
 			for(Droplets d : a.getDroplets() ){
