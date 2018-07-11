@@ -12,41 +12,19 @@
 #include <string>
 #include <fstream>
 #include <cmath>
+#include <limits>
 using namespace std;
 
+/*
+ * returns the distance from a point(x/y) to the center of a given droplet
+ */
 double getDistanceToDroplet(double x, double y, Droplets d){
 	return (sqrt(pow(d.getX()-x, 2) + pow(d.getY()-y, 2)));
 }
 
-void createAreaVTK(string dataname, double ***area, Area a){
-	ofstream fos(dataname+"areaSize.vtk");
-	if(!fos || ! fos.is_open()){
-		cerr << "There was a problem opening the input file." << endl;
-		exit(0);
-	}
-	fos << "# vtk DataFile Version 3.0" <<endl;
-	fos << "vtk Output in ascii" <<endl;
-	fos << "ASCII" << endl;
-	fos << "DATASET STRUCTURED_POINTS" << endl;
-	fos <<"DIMENSIONS " << a.getWidth() << " " << a.getHeight() <<endl;
-	fos << "ORIGIN 0 0 0" << endl;
-	fos << "SPACING 1 1 1" <<endl;
-	fos << "POINT_DATA " << (a.getWidth()*a.getWidth()) << endl;
-	fos << "\n";
-	fos << "SCALARS Cells int 1" << endl;
-	fos << "LOOKUP_TABLE default" << endl;
-	for(int x = 0; x < a.getWidth(); x++){
-		for(int y = 0; a.getHeight(); y++){
-			fos << (int)(area[0][x][y]) << endl;
-		}
-	}
-	fos.close();
-}
-
-void createAngleVTK(string dataname, Area a){
-	
-}
-
+/*
+ * generates a filename, which depends on the current date and time 
+ */
 string generateFilenamePrefix(){
     time_t rawtime;
 	struct tm * timeinfo;
@@ -58,6 +36,9 @@ string generateFilenamePrefix(){
     return str;
 }
 
+/*
+ * parses the given arguments
+ */
 void parseArgs(int &argc, char **argv, string &inputFile, string &outputFile, bool &createOutputFile){
 	string in("-i");
 	string out("-o");
@@ -92,18 +73,80 @@ void parseArgs(int &argc, char **argv, string &inputFile, string &outputFile, bo
     }
 }
 
-void calculateArea( Area a,double ***area){
-	for(int x = 0; x < a.getWidth(); x++){
-		for(int y = 0; a.getHeight(); y++){
-			area[0][x][y] = 0.;
+/*
+ * writes every Droplet of the area in the given file
+ */
+void writeBasicOutput(Area a, string outputFile){
+	ofstream fos(outputFile+".txt");
+	if(!fos || ! fos.is_open()){
+		cerr << "There was a problem opening the output file " << outputFile <<".txt" << endl;
+		exit(0);
+	}
+	for(Droplets d : a.getDroplets() ){
+		fos << d << "\n";
+	}
+	fos.close();
+}
+
+/*
+ * creates a vtk file for paraview used
+ */
+void writeVTKFiles(Area a, string outputFilePrefix){
+	ofstream fosS(outputFilePrefix+"_area_size.vtk");
+	ofstream fosA(outputFilePrefix+"_angle_dist.vtk");
+	if(!fosS  || !fosA|| ! fosS.is_open() ||  !fosA.is_open()){
+		cerr << "There was a problem opening the output files." << endl;
+		exit(0);
+	}
+	fosS << "# vtk DataFile Version 3.0\n" ;
+	fosA << "# vtk DataFile Version 3.0\n" ;
+	fosS << "vtk Output in ascii\n";
+	fosA << "vtk Output in ascii\n";
+	fosS << "ASCII\n";
+	fosA << "ASCII\n";
+	fosS << "DATASET STRUCTURED_POINTS\n";
+	fosA << "DATASET STRUCTURED_POINTS\n";
+	fosS <<"DIMENSIONS " << a.getWidth() << " " << a.getHeight() << " 1"<<"\n";
+	fosA <<"DIMENSIONS " << a.getWidth() << " " << a.getHeight() << " 1"<<"\n";
+	fosS << "ORIGIN 0 0 0\n";
+	fosA << "ORIGIN 0 0 0\n";
+	fosS << "SPACING 1 1 1\n";
+	fosA << "SPACING 1 1 1\n";
+	fosS << "POINT_DATA " << (a.getWidth()*a.getWidth()) << "\n\n";
+	fosA << "POINT_DATA " << (a.getWidth()*a.getWidth()) << "\n\n";
+	fosS << "SCALARS Cells int 1\n";
+	fosA << "SCALARS Cells int 1\n";
+	fosS << "LOOKUP_TABLE default\n";
+	fosA << "LOOKUP_TABLE default\n";
+	for(int x = 0; x < a.getWidth()+0.5; x++){
+		for(int y = 0; y < a.getHeight()+0.5; y++){
+			int value = 0;
+			unsigned int minID = 0;
+			double angle;
+            double distanceMin = numeric_limits<double>::max();
 			for(Droplets d : a.getDroplets() ){
-				if(getDistanceToDroplet(x, y, d) <= d.getRadian()){
-					area[0][x][y] = 1.;
-					break;
+				double distXY = getDistanceToDroplet(x, y, d);
+				if(distXY <= d.getRadian()){
+					value = 1;
 				}
+				if(distXY < distanceMin){
+					distanceMin = distXY;
+					minID = d.getID();
+					angle = d.getAngle();
+				}
+				
 			}
+			fosS << value << "\n";
+			fosA << angle << "\n";
 		}
-    }
+	}
+	fosS.close();
+	fosA.close();
+}
+
+void writeOutputFiles(Area a, string outputFilePrefix){
+	writeBasicOutput(a, outputFilePrefix);
+    writeVTKFiles(a, outputFilePrefix);
 }
 
 int main(int argc, char *argv[]){
@@ -118,32 +161,36 @@ int main(int argc, char *argv[]){
 			cerr << "There was a problem opening the input file." << endl;
 			exit(0);
 		}
+		/* read the parameters for the constructor of the area */
 		unsigned int n;
 		double width, height, angleMin, angleMax, angleMean, 
 			angleStdDeviation, sizeMin, sizeMax, sizeMean, sizeStdDeviation;
 		fis >> n >> width >> height >> angleMin >> angleMax >> angleMean >>
 			angleStdDeviation >> sizeMin >> sizeMax >> sizeMean >> sizeStdDeviation;
+		
 		cout << "n = " << n << endl;
 		cout << "width = " << width << "\theight = " << height << endl;
 		cout << "Angle Minimum = " << angleMin << "\tAngle Maximum = " << angleMax << 
 			"\tAngle Mean = " << angleMean << "\tAngle Standard Deviation = " << angleStdDeviation << endl;
 		cout << "Droplet Size Minimum = " << sizeMin << "\tDroplet size Maximum = " << sizeMax << 
 			"\tDroplet Size Mean = " << sizeMean << "\tDroplet Size Standard Deviation = " << sizeStdDeviation << endl;
+		
 		fis.close();
+		
 		Area a(n, width, height, angleMin, angleMax, angleMean, angleStdDeviation,
 			sizeMin, sizeMax, sizeMean, sizeStdDeviation);
+		
 		if(createOutputFile){
-			double area[2][(int)(width+0.5)][(int)(height)];
 			
 			if( outputFile == string("")){
 				outputFile = generateFilenamePrefix();
 				cout << "The data will be stored in "<< outputFile << endl;
 			}
-			calculateArea(a, area);
-		//	createAreaVTK(outputFile, area, a);
-		//	createAngleVTK(outputFile,area, a);
+			writeOutputFiles(a, outputFile);
 		}
+		
 		else{
+			
 			for(Droplets d : a.getDroplets() ){
 				cout << d << endl;
 			}
@@ -152,6 +199,7 @@ int main(int argc, char *argv[]){
 	}
 	
 	if(inputFile == string("")){
+		
 		cout << "Default values are used." << endl;
 		Area a;
 		if(createOutputFile){
@@ -159,8 +207,7 @@ int main(int argc, char *argv[]){
 				outputFile = generateFilenamePrefix();
 				cout << "The data will be stored in "<< outputFile << endl;
 			}
-//			createAreaVTK(outputFile, a);
-//			createAngleVTK(outputFile, a);
+			writeOutputFiles(a, outputFile);
 		}
 		else{
 			for(Droplets d : a.getDroplets() ){
@@ -168,6 +215,6 @@ int main(int argc, char *argv[]){
 			}
 		}
 	}
-
+	cout << "Process successful" << endl;
 	return 0;
 }
