@@ -115,11 +115,11 @@ void writeVTKFiles(Area a, string outputFilePrefix){
 	fosS << "POINT_DATA " << (a.getWidth()*a.getWidth()) << "\n\n";
 	fosA << "POINT_DATA " << (a.getWidth()*a.getWidth()) << "\n\n";
 	fosS << "SCALARS Cells int 1\n";
-	fosA << "SCALARS Cells int 1\n";
+	fosA << "SCALARS Cells double 1\n";
 	fosS << "LOOKUP_TABLE default\n";
 	fosA << "LOOKUP_TABLE default\n";
-	for(int x = 0; x < a.getWidth()+0.5; x++){
-		for(int y = 0; y < a.getHeight()+0.5; y++){
+	for(int x = 0; x < (int)(a.getWidth()+0.5); x++){
+		for(int y = 0; y < (int)(a.getHeight()+0.5); y++){
 			int value = 0;
 			unsigned int minID = 0;
 			double angle;

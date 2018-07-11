@@ -1,0 +1,26 @@
+ R E A D M E
+ ============
+	- Main Programm	: CreateAreas.cpp
+	- Date			: 11.07.2018
+
+ ------------
+
+Before the first use the source code needs to be compiled by the following command:
+
+	g++ -std=c++11 Area.cpp Droplets.cpp CreateArea.cpp [-o preferredProgrammName]
+	
+preferredProgrammName will be the name of the compiled programm. If the parameter "-o preferredProgrammName" is not specified the programm will be named "a.out".
+
+ ------------
+
+The programm can be called by the command:
+
+	preferredProgrammName [-i inputFileName] [-o [outputFileName]]
+
+When no parameters are given the programm will use default values to generate an area containing randomly distributed droplets. The output will be displayed on the terminal.
+After the option "-i" it has to follow an input file containing:
+
+[1.] number of points [2.] width [3.] height [4.] minimum angle value [5.] maximum angle value [6.] mean angle value [7.] standard deviation of the angle [8.] minimum area of a droplet [9.] maximum area of a droplet [10.] mean area of a droplet [11.] standard deviation of the area of a droplet
+
+If the option "-o" is given the output will be saved in a .txt file and two .vtk files.
+After the option "-o" it can follow an output file name.
