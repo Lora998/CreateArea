@@ -18,6 +18,7 @@ class Area {
 		   double, double, double, double);		// general constructor
    inline double getWidth() const {return width;}
    inline double getHeight() const {return height;}
+   inline unsigned int getN() const {return n;}
    inline std::vector<Droplets> getDroplets() const {return droplets;}
   private:
    unsigned int n;								// number of points

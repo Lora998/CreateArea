@@ -94,58 +94,34 @@ void writeBasicOutput(Area a, string outputFile){
  * creates a vtk file for paraview used
  */
 void writeVTKFiles(Area a, string outputFilePrefix){
-	ofstream fosS(outputFilePrefix+"_area_size.vtk");
-	ofstream fosA(outputFilePrefix+"_angle_dist.vtk");
-	if(!fosS  || !fosA|| ! fosS.is_open() ||  !fosA.is_open()){
-		cerr << "There was a problem opening the output files." << endl;
+	ofstream fos(outputFilePrefix+"_droplet_dist.vtk");
+	if(!fos|| ! fos.is_open() ){
+		cerr << "There occured a problem opening the output file." << endl;
 		exit(0);
 	}
 	cout << "Output files successfully opened." << endl;
-	fosS << "# vtk DataFile Version 3.0\n" ;
-	fosA << "# vtk DataFile Version 3.0\n" ;
-	fosS << "vtk Output in ascii\n";
-	fosA << "vtk Output in ascii\n";
-	fosS << "ASCII\n";
-	fosA << "ASCII\n";
-	fosS << "DATASET STRUCTURED_POINTS\n";
-	fosA << "DATASET STRUCTURED_POINTS\n";
-	fosS <<"DIMENSIONS " << a.getWidth() << " " << a.getHeight() << " 1"<<"\n";
-	fosA <<"DIMENSIONS " << a.getWidth() << " " << a.getHeight() << " 1"<<"\n";
-	fosS << "ORIGIN 0 0 0\n";
-	fosA << "ORIGIN 0 0 0\n";
-	fosS << "SPACING 1 1 1\n";
-	fosA << "SPACING 1 1 1\n";
-	fosS << "POINT_DATA " << (a.getWidth()*a.getWidth()) << "\n\n";
-	fosA << "POINT_DATA " << (a.getWidth()*a.getWidth()) << "\n\n";
-	fosS << "SCALARS Cells int 1\n";
-	fosA << "SCALARS Cells double 1\n";
-	fosS << "LOOKUP_TABLE default\n";
-	fosA << "LOOKUP_TABLE default\n";
-	for(int x = 0; x < (int)(a.getWidth()+0.5); x++){
-		for(int y = 0; y < (int)(a.getHeight()+0.5); y++){
-			int value = 0;
-			unsigned int minID = 0;
-			double angle;
-            double distanceMin = numeric_limits<double>::max();
-			for(Droplets d : a.getDroplets() ){
-				double distXY = getDistanceToDroplet(x, y, d);
-				if(distXY <= d.getRadian()){
-					value = 1;
-				}
-				if(distXY < distanceMin){
-					distanceMin = distXY;
-					minID = d.getID();
-					angle = d.getAngle();
-				}
-				
-			}
-			fosS << value << "\n";
-			fosA << angle << "\n";
-		}
-	}
-	fosS.close();
-	fosA.close();
-	cout << "Output files successfully closed." << endl;
+	fos << "# vtk DataFile Version 3.0\n" ;
+    fos << "vtk output\n";
+	fos << "ASCII\n";
+	fos << "DATASET POLYDATA\n";
+	fos << "POINTS " << a.getN() << " float\n";
+    for(Droplets d : a.getDroplets() ){
+        fos << "0.0 " << d.getX() << " " << d.getY() << "\n";
+    }
+    fos << "POINT_DATA " << a.getN() << "\n";
+    fos << "FIELD droplets 2\n";
+    fos << "angle 1 " << a.getN() << " float\n";
+    for(Droplets d : a.getDroplets() ){
+        fos << d.getAngle() << " " ;
+    }
+    fos <<"\n";
+    fos << "area 1 " << a.getN() << " float\n";
+    for(Droplets d : a.getDroplets() ){
+        fos << d.getA() << " " ;
+    }
+    fos << "\n";
+    fos.close();
+	cout << "Output file successfully closed." << endl;
 }
 
 void writeOutputFiles(Area a, string outputFilePrefix){
