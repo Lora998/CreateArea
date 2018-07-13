@@ -1,0 +1,17 @@
+****************************************************
+* VHIRLPOOL format:
+* ’*’ in Spalte 1 identifies a comment (until the end of line)
+* ’text = Wert’ is a data line
+* ’=’ delimiter
+****************************************************
+Number of droplets = 30
+Width = 15
+Height = 15
+MinimumAngle = 0.2
+Angle Maximum = 75
+Angle Mean = 12
+Angle Standard Deviation = 3.
+Droplet Size Minimum = 0.1
+Droplet size Maximum = 3
+Droplet Size Mean = 0.5
+Droplet Size Standard Deviation = 0.2

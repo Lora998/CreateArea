@@ -13,6 +13,8 @@
 #include <fstream>
 #include <cmath>
 #include <limits>
+#include "textread.h"
+#include <string.h>
 using namespace std;
 
 /*
@@ -98,6 +100,7 @@ void writeVTKFiles(Area a, string outputFilePrefix){
 		cerr << "There was a problem opening the output files." << endl;
 		exit(0);
 	}
+	cout << "Output files successfully opened." << endl;
 	fosS << "# vtk DataFile Version 3.0\n" ;
 	fosA << "# vtk DataFile Version 3.0\n" ;
 	fosS << "vtk Output in ascii\n";
@@ -142,6 +145,7 @@ void writeVTKFiles(Area a, string outputFilePrefix){
 	}
 	fosS.close();
 	fosA.close();
+	cout << "Output files successfully closed." << endl;
 }
 
 void writeOutputFiles(Area a, string outputFilePrefix){
@@ -156,33 +160,32 @@ int main(int argc, char *argv[]){
 	parseArgs(argc, argv, inputFile, outputFile, createOutputFile);
 	
 	if(inputFile != string("")){
-		ifstream fis(string(inputFile), ifstream::in);
-		if(!fis || ! fis.is_open()){
+        double paras[11];
+		char *cstr = new char[inputFile.length() + 1];
+		strcpy(cstr, inputFile.c_str());
+		int state = textread(cstr, paras, 11);
+		if(state < 0){
 			cerr << "There was a problem opening the input file." << endl;
 			exit(0);
 		}
+		delete [] cstr;
 		/* read the parameters for the constructor of the area */
-		unsigned int n;
-		double width, height, angleMin, angleMax, angleMean, 
-			angleStdDeviation, sizeMin, sizeMax, sizeMean, sizeStdDeviation;
-		fis >> n >> width >> height >> angleMin >> angleMax >> angleMean >>
-			angleStdDeviation >> sizeMin >> sizeMax >> sizeMean >> sizeStdDeviation;
 		
-		cout << "n = " << n << endl;
-		cout << "width = " << width << "\theight = " << height << endl;
-		cout << "Angle Minimum = " << angleMin << "\tAngle Maximum = " << angleMax << 
-			"\tAngle Mean = " << angleMean << "\tAngle Standard Deviation = " << angleStdDeviation << endl;
-		cout << "Droplet Size Minimum = " << sizeMin << "\tDroplet size Maximum = " << sizeMax << 
-			"\tDroplet Size Mean = " << sizeMean << "\tDroplet Size Standard Deviation = " << sizeStdDeviation << endl;
+		cout << "n = " << paras[0] << endl;
+		cout << "width = " << paras[1] << "\theight = " << paras[2] << endl;
+		cout << "Angle Minimum = " << paras[3] << "\tAngle Maximum = " << paras[4] << 
+			"\tAngle Mean = " << paras[5] << "\tAngle Standard Deviation = " << paras[6] << endl;
+		cout << "Droplet Size Minimum = " << paras[7] << "\tDroplet size Maximum = " << paras[8] << 
+			"\tDroplet Size Mean = " << paras[9] << "\tDroplet Size Standard Deviation = " << paras[10] << endl;
+
 		
-		fis.close();
-		
-		Area a(n, width, height, angleMin, angleMax, angleMean, angleStdDeviation,
-			sizeMin, sizeMax, sizeMean, sizeStdDeviation);
-		
+		Area a((int)(paras[0]), paras[1], paras[2], paras[3], paras[4], paras[5], paras[6],
+			paras[7], paras[8], paras[9], paras[10]);
+
 		if(createOutputFile){
 			
 			if( outputFile == string("")){
+				
 				outputFile = generateFilenamePrefix();
 				cout << "The data will be stored in "<< outputFile << endl;
 			}
