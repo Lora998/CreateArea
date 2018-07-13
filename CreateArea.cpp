@@ -94,7 +94,7 @@ void writeBasicOutput(Area a, string outputFile){
  * creates a vtk file for paraview used
  */
 void writeVTKFiles(Area a, string outputFilePrefix){
-	ofstream fos(outputFilePrefix+"_droplet_dist.vtk");
+	ofstream fos(outputFilePrefix+"_pore_dist.vtk");
 	if(!fos|| ! fos.is_open() ){
 		cerr << "There occured a problem opening the output file." << endl;
 		exit(0);
